@@ -242,3 +242,42 @@ You will submit a link to a CodeSandbox with your responses. Make sure your Code
 - Don't remove existing `data-testid` tags. Otherwise, your results will be invalidated.
 - Other than the bugs, don't modify anything that will have a different outcome. Otherwise, your results might be invalidated.
 - Plagiarism is a serious offense and will result in disqualification from further consideration.
+
+
+### Fixes Bug 1
+  - Changed the position in RampInputSelect--dropdown-container in index.css to absolute
+  - deleted style={{ top: dropdownPosition.top, left: dropdownPosition.left }} from the div in input from the parent div of {renderItems()} in InputSelect/index.tsx
+
+### Fixes Bug 2
+  - Added htmlFor={inputId} to the <label> in InputCheckbox/index.tsx
+
+### Fixes Bug 3
+  - Added a conditional in loadTransactionsByEmployee function in App.tsx that checks if employeeId is empty.
+  - And added the following 3 lines of code:
+    - transactionsByEmployeeUtils.invalidateData()
+    - await paginatedTransactionsUtils.fetchAll()
+    - setIsLoading(false) for when it is empty.
+
+### Fixes Bug 4
+    - Updated the return in setPaginatedTransactions in hooks/usePaginatedTransactions.ts to this ->
+    - setPaginatedTransactions((previousResponse) => {
+      if (response === null || previousResponse === null) {
+        return response
+      }
+
+      return {
+        data: [...previousResponse.data, ...response.data],
+        nextPage: response.nextPage,
+      }
+    })
+
+### Fixes Bug 5
+    - For both Part 1 & Part 2 I simply changed the isLoading={isLoading} in <InputSelect> in App.tsx to isLoading={employeeUtils.loading} which fixed the issue for both situations.
+    - Also, I realized that loading the employees prior to loading the transactions enabled users to click a filtered employee before the loadAllTransactions() functionality finishes and all employee transactions finish rendering. Because both loadAllTransactions and loadTransactionsByEmployee are asynchronous this was causing the paginatedTransactions to load regardless since at times await paginatedTransactionsUtils.fetchAll() would get called last due to the asynchronous nature of both functions. To address this issue I added a setIsDropdownDisabled state to the InputSelect that disables the user from clicking on a filtered employee every time loadAllTransactions() is called which is only on initial load and when view more is clicked.
+
+### Fixes Bug 6
+    - For part 1 I added a isAllEmployees boolean state and leverage this to hide the button whenever it is false and showcase it if true. From here I just made sure to toggle it from true to false whenever a specific employee is selected and from false to true when All Employees is selected.
+    - For part 2 I added a paginatedTransactions?.nextPage !== null check when rendering the 'view more' button. The button will not render as long as nextPage is null.
+
+### Fixes Bug 7
+    - Changing the fetchAll functions to fetchWithoutCache in both the usePaginatedTransactions and useTransactionsByEmployee scripts fixed this issue.
