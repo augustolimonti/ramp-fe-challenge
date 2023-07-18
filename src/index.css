@@ -113,6 +113,13 @@ hr.RampBreak--l {
   cursor: pointer;
 }
 
+.RampInputSelect--dropdown-item-disabled {
+  padding: 1rem 0.75rem;
+  background-color: var(--color-empty-shade);
+  border-bottom: 1px solid var(--color-light-shade);
+  cursor: not-allowed;
+}
+
 .RampInputSelect--dropdown-item-highlighted {
   background-color: var(--color-lighter-shade);
 }

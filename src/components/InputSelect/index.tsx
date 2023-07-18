@@ -5,6 +5,7 @@ import { DropdownPosition, GetDropdownPositionFn, InputSelectOnChange, InputSele
 
 export function InputSelect<TItem>({
   label,
+  isDropdownDisabled,
   defaultValue,
   onChange: consumerOnChange,
   items,
@@ -96,16 +97,22 @@ export function InputSelect<TItem>({
             return (
               <div
                 key={parsedItem.value}
-                {...getItemProps({
+                {...(!isDropdownDisabled ? getItemProps({
                   key: parsedItem.value,
                   index,
                   item,
                   className: classNames("RampInputSelect--dropdown-item", {
                     "RampInputSelect--dropdown-item-highlighted": highlightedIndex === index,
-                    "RampInputSelect--dropdown-item-selected":
-                      parsedSelectedItem?.value === parsedItem.value,
+                    "RampInputSelect--dropdown-item-selected": parsedSelectedItem?.value === parsedItem.value,
                   }),
-                })}
+                }) : {})}
+                className={classNames(
+                  isDropdownDisabled ? "RampInputSelect--dropdown-item-disabled" : "RampInputSelect--dropdown-item", // Apply disabled style if isDropdownDisabled is true
+                  {
+                    "RampInputSelect--dropdown-item-highlighted": highlightedIndex === index,
+                    "RampInputSelect--dropdown-item-selected": parsedSelectedItem?.value === parsedItem.value,
+                  }
+                )}
               >
                 {parsedItem.label}
               </div>

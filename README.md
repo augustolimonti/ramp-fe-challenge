@@ -80,6 +80,11 @@ We don't have a real API for this challenge, so we added some utilities to simul
 
 **Actual:** Options dropdown stays in the same position as you scroll the page, losing the reference to the select input
 
+<!-- Fixes Bug 1 ->
+  - Changed the position in RampInputSelect--dropdown-container in index.css to absolute
+  - deleted style={{ top: dropdownPosition.top, left: dropdownPosition.left }} from the div in input from the parent div of {renderItems()} in InputSelect/index.tsx
+-->
+
 # Bug 2: Approve checkbox not working
 
 **How to reproduce:**
@@ -89,6 +94,9 @@ We don't have a real API for this challenge, so we added some utilities to simul
 **Expected:** Clicking the checkbox toggles its value
 
 **Actual:** Nothing happens
+
+<!-- Fixes Bug 2 -->
+<!--Added htmlFor={inputId} to the <label> in InputCheckbox/index.tsx  -->
 
 # Bug 3: Cannot select _All Employees_ after selecting an employee
 
@@ -103,6 +111,13 @@ We don't have a real API for this challenge, so we added some utilities to simul
 
 **Actual:** The page crashes
 
+<!-- Fixes Bug 3 -->
+<!-- Added a conditional in loadTransactionsByEmployee function in App.tsx that checks if employeeId is empty.
+  And added the following 3 lines of code:
+  transactionsByEmployeeUtils.invalidateData()
+  await paginatedTransactionsUtils.fetchAll()
+  setIsLoading(false) for when it is empty. -->
+
 # Bug 4: Clicking on View More button not showing correct data
 
 **How to reproduce:**
@@ -113,6 +128,20 @@ We don't have a real API for this challenge, so we added some utilities to simul
 **Expected:** Initial transactions plus new transactions are shown on the page
 
 **Actual:** New transactions replace initial transactions, losing initial transactions
+
+<!-- Fixes Bug 4 -->
+<!-- Updated the return in setPaginatedTransactions in hooks/usePaginatedTransactions.ts to this ->
+setPaginatedTransactions((previousResponse) => {
+  if (response === null || previousResponse === null) {
+    return response
+  }
+
+  return {
+    data: [...previousResponse.data, ...response.data],
+    nextPage: response.nextPage,
+  }
+})
+ -->
 
 # Bug 5: Employees filter not available during loading more data
 
@@ -142,6 +171,10 @@ _This bug has 2 wrong behaviors that will be fixed with the same solution_
 
 **Actual:** The employees filter shows "Loading employees..." after clicking **View more** until new transactions are loaded.
 
+<!-- Fixes Bug 5 -->
+<!-- For both Part 1 & Part 2 I simply changed the isLoading={isLoading} in <InputSelect> in App.tsx to isLoading={employeeUtils.loading} which fixed the issue for both situations.-->
+<!-- Also, I realized that loading the employees prior to loading the transactions enabled users to click a filtered employee before the loadAllTransactions() functionality finishes and all employee transactions finish rendering. Because both loadAllTransactions and loadTransactionsByEmployee are asynchronous this was causing the paginatedTransactions to load regardless since at times await paginatedTransactionsUtils.fetchAll() would get called last due to the asynchronous nature of both functions. To address this issue I added a setIsDropdownDisabled state to the InputSelect that disables the user from clicking on a filtered employee every time loadAllTransactions() is called which is only on initial load and when view more is clicked.   -->
+
 # Bug 6: View more button not working as expected
 
 _This bug has 2 wrong behaviors that can be fixed with the same solution. It's acceptable to fix with separate solutions as well._
@@ -170,6 +203,10 @@ _This bug has 2 wrong behaviors that can be fixed with the same solution. It's a
 
 **Actual:** When you reach the end of the data, the **View More** button is still showing and you are still able to click the button. If you click it, the page crashes.
 
+<!-- Fixes Bug 6 -->
+<!-- For part 1 I added a isAllEmployees boolean state and leverage this to hide the button whenever it is false and showcase it if true. From here I just made sure to toggle it from true to false whenever a specific employee is selected and from false to true when All Employees is selected.  -->
+<!-- For part 2 I added a paginatedTransactions?.nextPage !== null check when rendering the 'view more' button. The button will not render as long as nextPage is null. -->
+
 # Bug 7: Approving a transaction won't persist the new value
 
 _You need to fix some of the previous bugs in order to reproduce_
@@ -188,6 +225,9 @@ _You need to fix some of the previous bugs in order to reproduce_
 **Expected:** In steps 6 and 8, toggled transaction kept the same value it was given in step 2 _(E.g. Social Media Ads Inc is unchecked)_
 
 **Actual:** In steps 6 and 8, toggled transaction lost the value given in step 2. _(E.g. Social Media Ads Inc is checked again)_
+
+<!-- Fixes Bug 7 -->
+<!-- Changing the fetchAll functions to fetchWithoutCache in both the usePaginatedTransactions and useTransactionsByEmployee scripts fixed this issue. -->
 
 ## Submission
 

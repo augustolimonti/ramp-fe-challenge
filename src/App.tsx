@@ -12,8 +12,9 @@ export function App() {
   const { data: employees, ...employeeUtils } = useEmployees()
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isAllEmployees, setIsAllEmployees] = useState(true)
+  const [isDropdownDisabled, setIsDropdownDisabled] = useState(true)
 
   const transactions = useMemo(
     () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
@@ -21,18 +22,30 @@ export function App() {
   )
 
   const loadAllTransactions = useCallback(async () => {
-    setIsLoading(true)
+    setIsDropdownDisabled(true)
     transactionsByEmployeeUtils.invalidateData()
-
     await employeeUtils.fetchAll()
-    setIsLoading(false)
     await paginatedTransactionsUtils.fetchAll()
+    setIsDropdownDisabled(false)
+    setIsLoading(false)
   }, [employeeUtils, paginatedTransactionsUtils, transactionsByEmployeeUtils])
 
   const loadTransactionsByEmployee = useCallback(
     async (employeeId: string) => {
-      paginatedTransactionsUtils.invalidateData()
-      await transactionsByEmployeeUtils.fetchById(employeeId)
+      if (employeeId){
+        setIsLoading(true)
+        setIsAllEmployees(false);
+        paginatedTransactionsUtils.invalidateData()
+        await transactionsByEmployeeUtils.fetchById(employeeId)
+        setIsLoading(false)
+      }
+      else {
+        setIsLoading(true)
+        setIsAllEmployees(true);
+        transactionsByEmployeeUtils.invalidateData()
+        await paginatedTransactionsUtils.fetchAll()
+        setIsLoading(false)
+      }
     },
     [paginatedTransactionsUtils, transactionsByEmployeeUtils]
   )
@@ -51,7 +64,8 @@ export function App() {
         <hr className="RampBreak--l" />
 
         <InputSelect<Employee>
-          isLoading={isLoading}
+          isLoading={employeeUtils.loading}
+          isDropdownDisabled={isDropdownDisabled}
           defaultValue={EMPTY_EMPLOYEE}
           items={employees === null ? [] : [EMPTY_EMPLOYEE, ...employees]}
           label="Filter by employee"
@@ -61,12 +75,11 @@ export function App() {
             label: `${item.firstName} ${item.lastName}`,
           })}
           onChange={async (newValue) => {
-            if (newValue === null || !newValue.id) {
+            if (newValue === null) {
               setIsAllEmployees(true);
-              await loadAllTransactions();
+              // await loadAllTransactions();
               return
             }
-            setIsAllEmployees(false);
             await loadTransactionsByEmployee(newValue.id)
           }}
         />
@@ -74,7 +87,7 @@ export function App() {
         <div className="RampBreak--l" />
 
         <div className="RampGrid">
-          <Transactions transactions={transactions} />
+          <Transactions transactions={transactions} isLoading={isLoading} />
 
           {isAllEmployees && paginatedTransactions?.nextPage !== null && (
             <button
